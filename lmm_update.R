@@ -3,9 +3,9 @@
 #' Code related to Enisse Kharroubi & Marius Koechlin 2025: Labour market flows and the Phillips curve
 #' Code author: Marius Koechlin
 #' 
-#' This code file updates the unemployment gap measure introduced in the paper mentioned above.
+#' This code file updates the labour market momentum measure introduced in the paper mentioned above.
 #' 
-#' Last updated: 17.07.2025
+#' Last updated: 17.08.2026
 
 
 
@@ -171,17 +171,17 @@ final_data <-
   lm_data %>% dplyr::select(date, u_rate, cpi_core_yoy) %>%
   left_join(flow_u_data, by = "date") 
 
-# Calculate the unemployment gap
+# Calculate the labour market momentum
 final_data <- final_data %>%
-  mutate(u_gap = flow_u - u_rate) %>%
+  mutate(lmm = flow_u - u_rate) %>%
   # Calculate the 6-month moving average
-  mutate(across(c(u_rate, flow_u, u_gap), ~ rollmean(., 6, fill = NA, align = "right", na.rm = TRUE), .names = "{col}_ma6"))
+  mutate(across(c(u_rate, flow_u, lmm), ~ rollmean(., 6, fill = NA, align = "right", na.rm = TRUE), .names = "{col}_ma6"))
 
 
 # Save the dataset --------------------------------------------------------
 # Save as CSV
-write.csv(final_data %>% dplyr::select(date, u_gap, u_gap_ma6) %>% rename(KK_u_gap = u_gap, KK_u_gap_ma6 = u_gap_ma6) %>% drop_na(),
-          file = "output/Kharroubi_Koechlin_u_gap_data.csv", row.names = FALSE)
+write.csv(final_data %>% dplyr::select(date, lmm, lmm_ma6) %>% rename(KK_lmm = lmm, KK_lmm_ma6 = lmm_ma6) %>% drop_na(),
+          file = "output/Kharroubi_Koechlin_lmm_data.csv", row.names = FALSE)
 
 
 # Some analysis -----------------------------------------------------------
@@ -212,16 +212,16 @@ final_data %>%
   geom_rect(xmin = as.Date("2001-03-01"), xmax = as.Date("2001-11-30"), ymin = -Inf, ymax = Inf, fill = "gray90", alpha = 0.02) +
   geom_rect(xmin = as.Date("2008-01-01"), xmax = as.Date("2009-06-30"), ymin = -Inf, ymax = Inf, fill = "gray90", alpha = 0.02) +
   geom_rect(xmin = as.Date("2020-03-01"), xmax = as.Date("2020-04-30"), ymin = -Inf, ymax = Inf, fill = "gray90", alpha = 0.02) +
-  geom_line(aes(y = u_gap_ma6)) +
+  geom_line(aes(y = lmm_ma6)) +
   # Fill negative and positive area
-  geom_ribbon(aes(ymin = pmin((u_gap_ma6), 0), ymax = 0), fill = "#aa332f", alpha = 0.3) +
-  geom_ribbon(aes(ymin = 0, ymax = pmax((u_gap_ma6), 0)), fill = "green3", alpha = 0.3) +
+  geom_ribbon(aes(ymin = pmin((lmm_ma6), 0), ymax = 0), fill = "#aa332f", alpha = 0.3) +
+  geom_ribbon(aes(ymin = 0, ymax = pmax((lmm_ma6), 0)), fill = "green3", alpha = 0.3) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black", alpha = 0.5) +
-  labs(title = "Unemployment Gap (Flow-based - Stock-based)", x = "", y = "Percentage points") +
+  labs(title = "Labour market momentum (Flow-based - Stock-based)", x = "", y = "Percentage points") +
   scale_x_date(breaks = seq(as.Date("1990-01-01"), max(as.Date("2025-12-01"), na.rm = TRUE), by = "5 years"), date_labels = "%Y") +
   theme_minimal(base_family = "Palatino", base_size = 20) +
   theme(legend.position = "bottom", legend.margin=margin(-5,0,5,0), legend.box.spacing = unit(1, "pt"))
-ggsave("output/u_gap.png", width = 22, height = 12, units = "cm")
+ggsave("output/lmm.png", width = 22, height = 12, units = "cm")
 
 
 final_data %>%
@@ -231,34 +231,34 @@ final_data %>%
   geom_rect(xmin = as.Date("2008-01-01"), xmax = as.Date("2009-06-30"), ymin = -Inf, ymax = Inf, fill = "gray90", alpha = 0.02) +
   geom_rect(xmin = as.Date("2020-03-01"), xmax = as.Date("2020-04-30"), ymin = -Inf, ymax = Inf, fill = "gray90", alpha = 0.02) +
   geom_line(aes(y = dplyr::lead(cpi_core_yoy, 12), color = "1-year ahead Core CPI (lhs)")) +
-  geom_line(aes(y = (u_gap_ma6 * 4) + 2, color = "Unemployment gap (rhs)")) +
-  scale_color_manual(name = "", values = c("Unemployment gap (rhs)" = "#aa332f", "1-year ahead Core CPI (lhs)" = "#58078c")) +
-  labs(x = "", y = "Percentage", title = "Core CPI inflation and the unemployment gap") +  
+  geom_line(aes(y = (lmm_ma6 * 4) + 2, color = "Labour market momentum (rhs)")) +
+  scale_color_manual(name = "", values = c("Labour market momentum (rhs)" = "#aa332f", "1-year ahead Core CPI (lhs)" = "#58078c")) +
+  labs(x = "", y = "Percentage", title = "Core CPI inflation and the LMM") +  
   scale_x_date(breaks = seq(as.Date("1990-01-01"), max(as.Date("2025-12-01"), na.rm = TRUE), by = "5 years"), date_labels = "%Y") +
   scale_y_continuous(breaks = scales::breaks_extended(n = 6),
                      sec.axis = sec_axis(~., name = "Percentage points", labels = function(x) (x - 2)/4,
                                          breaks = function(lims) unique(c(0 * 4 + 2, scales::breaks_extended(n = 6)(lims))) )) +
   theme_minimal(base_family = "Palatino", base_size = 20) +
   theme(legend.position = "bottom", legend.margin=margin(-5,0,5,0), legend.box.spacing = unit(1, "pt"))
-ggsave("output/core_cpi_u_gap.png", width = 22, height = 12, units = "cm")
+ggsave("output/core_cpi_lmm.png", width = 22, height = 12, units = "cm")
 
 
-# Summary statistics of the gap
+# Summary statistics of the LMM
 final_data %>%
-  summarise(mean_gap = mean(u_gap_ma6, na.rm = TRUE),
-            sd_gap = sd(u_gap_ma6, na.rm = TRUE),
-            min_gap = min(u_gap_ma6, na.rm = TRUE),
-            max_gap = max(u_gap_ma6, na.rm = TRUE),
-            median_gap = median(u_gap_ma6, na.rm = TRUE))
+  summarise(mean_gap = mean(lmm_ma6, na.rm = TRUE),
+            sd_gap = sd(lmm_ma6, na.rm = TRUE),
+            min_gap = min(lmm_ma6, na.rm = TRUE),
+            max_gap = max(lmm_ma6, na.rm = TRUE),
+            median_gap = median(lmm_ma6, na.rm = TRUE))
 
-# Development in the last three month of the gap
+# Development in the last three month of the LMM
 final_data %>%
   filter(date >= max(date) - months(3)) %>%
-  summarise(mean_gap = mean(u_gap_ma6, na.rm = TRUE),
-            sd_gap = sd(u_gap_ma6, na.rm = TRUE),
-            min_gap = min(u_gap_ma6, na.rm = TRUE),
-            max_gap = max(u_gap_ma6, na.rm = TRUE),
-            median_gap = median(u_gap_ma6, na.rm = TRUE))
+  summarise(mean_gap = mean(lmm_ma6, na.rm = TRUE),
+            sd_gap = sd(lmm_ma6, na.rm = TRUE),
+            min_gap = min(lmm_ma6, na.rm = TRUE),
+            max_gap = max(lmm_ma6, na.rm = TRUE),
+            median_gap = median(lmm_ma6, na.rm = TRUE))
 
 
 
