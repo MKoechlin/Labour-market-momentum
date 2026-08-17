@@ -165,7 +165,7 @@ flow_u_data <- flow_u_data %>%
          flow_u = flow_u * 100)
 
 
-# Combine the data & calculate the gap ------------------------------------
+# Combine the data & calculate the LMM ------------------------------------
 # Combine data
 final_data <- 
   lm_data %>% dplyr::select(date, u_rate, cpi_core_yoy) %>%
@@ -173,7 +173,7 @@ final_data <-
 
 # Calculate the labour market momentum
 final_data <- final_data %>%
-  mutate(lmm = flow_u - u_rate) %>%
+  mutate(lmm = u_rate - flow_u) %>%
   # Calculate the 6-month moving average
   mutate(across(c(u_rate, flow_u, lmm), ~ rollmean(., 6, fill = NA, align = "right", na.rm = TRUE), .names = "{col}_ma6"))
 
