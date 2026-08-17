@@ -217,7 +217,7 @@ final_data %>%
   geom_ribbon(aes(ymin = pmin((lmm_ma6), 0), ymax = 0), fill = "#aa332f", alpha = 0.3) +
   geom_ribbon(aes(ymin = 0, ymax = pmax((lmm_ma6), 0)), fill = "green3", alpha = 0.3) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black", alpha = 0.5) +
-  labs(title = "Labour market momentum (Stock-based - Flow-based)", x = "", y = "Percentage points") +
+  labs(title = "Labour market momentum", x = "", y = "Percentage points") +
   scale_x_date(breaks = seq(as.Date("1990-01-01"), max(as.Date("2025-12-01"), na.rm = TRUE), by = "5 years"), date_labels = "%Y") +
   theme_minimal(base_family = "Palatino", base_size = 20) +
   theme(legend.position = "bottom", legend.margin=margin(-5,0,5,0), legend.box.spacing = unit(1, "pt"))
